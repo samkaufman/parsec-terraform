@@ -16,13 +16,6 @@ variable "aws_region" {
   type = "string"
 }
 
-variable "aws_vpc" {
-  type = "string"
-}
-
-variable "aws_subnet" {
-  type = "string"
-}
 
 # Template
 
@@ -41,7 +34,6 @@ data "aws_ami" "parsec" {
 }
 
 resource "aws_security_group" "parsec" {
-  vpc_id = "${var.aws_vpc}"
   name = "parsec"
   description = "Allow inbound Parsec traffic and all outbound."
 
@@ -65,13 +57,6 @@ resource "aws_security_group" "parsec" {
       protocol = "udp"
       cidr_blocks = ["0.0.0.0/0"]
   }
-
-  egress {
-      from_port = 0
-      to_port = 0
-      protocol = "-1"
-      cidr_blocks = ["0.0.0.0/0"]
-  }
 }
 
 data "template_file" "user_data" {
@@ -85,8 +70,8 @@ data "template_file" "user_data" {
 resource "aws_spot_instance_request" "parsec" {
     spot_price = "0.7"
     ami = "${data.aws_ami.parsec.id}"
-    subnet_id = "${var.aws_subnet}"
     instance_type = "g2.2xlarge"
+    spot_type = "one-time"
 
     tags {
         Name = "ParsecServer"

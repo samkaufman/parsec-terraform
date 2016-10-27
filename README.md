@@ -19,6 +19,4 @@ parsec_authcode = "YOUR_PARSEC_AUTHCODE"
 aws_access_key = "YOUR_AWS_ACCESS_KEY_ID"
 aws_secret = "YOUR_AWS_SECRET_ACCESS_KEY"
 aws_region = "YOUR_AWS_REGION"
-aws_vpc = "YOUR_AWS_VPC"
-aws_subnet = "YOUR_AWS_SUBNET"
 ```
