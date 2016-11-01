@@ -1,2 +1,4 @@
 *.tfo
 *.tfstate*
+Redist/vcredist*.exe
+System32/XInput9_1_0.dll

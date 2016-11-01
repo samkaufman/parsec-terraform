@@ -1,5 +1,38 @@
 <powershell>
+  # Set Parsec's auth data
   $auth = "${authcode}"
   $auth | Out-File -Encoding ASCII "C:\Users\Administrator\AppData\Roaming\Parsec Server\auth"
+
+  # Set AWS credentials
+  Set-AWSCredentials -AccessKey "${iam_key}" -SecretKey "${iam_secret}" -StoreAs DeployProfile
+
+  # Bring online any offline disks, such as the secondary SAN volume
+  Get-Disk | Where-Object IsOffline -Eq $True | Set-Disk -IsOffline $False
+  Set-Disk 1 -IsReadOnly $False
+
+  # Move the important spots.
+  New-Item D:\User -type directory -force
+  New-Item D:\User\AppData -type directory -force
+  New-Item D:\User\AppData\Roaming -type directory -force
+  Set-ItemProperty -Path "Registry::${reg_user_root}\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders" -Name "AppData" -Value "D:\User\AppData\Roaming" -Type String
+  Set-ItemProperty -Path "Registry::${reg_user_root}\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" -Name "AppData" -Value "D:\User\AppData\Roaming" -Type ExpandString
+  New-Item D:\User\Desktop -type directory -force
+  Set-ItemProperty -Path "Registry::${reg_user_root}\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders" -Name "Desktop" -Value "D:\User\Desktop" -Type String
+  Set-ItemProperty -Path "Registry::${reg_user_root}\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" -Name "Desktop" -Value "D:\User\Desktop" -Type ExpandString
+  New-Item D:\User\Documents -type directory -force
+  Set-ItemProperty -Path "Registry::${reg_user_root}\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders" -Name "Personal" -Value "D:\User\Documents" -Type String
+  Set-ItemProperty -Path "Registry::${reg_user_root}\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" -Name "Personal" -Value "D:\User\Documents" -Type ExpandString
+
+  # Restart explorer after setting special folders
+  Stop-Process -ProcessName explorer
+
+  # Download and install VC runtime libs
+  Read-S3Object -BucketName "${deploy_bucket}" -Key "${vcredist64_key}" -File "C:\vcredist_x64.exe" -ProfileName DeployProfile
+  Read-S3Object -BucketName "${deploy_bucket}" -Key "${vcredist86_key}" -File "C:\vcredist_x86.exe" -ProfileName DeployProfile
+  Start-Process -FilePath "C:\vcredist_x64.exe" -ArgumentList "/install /q /norestart" -Verb RunAs -Wait
+  Start-Process -FilePath "C:\vcredist_x86.exe" -ArgumentList "/install /q /norestart" -Verb RunAs -Wait
+
+  # Download extra DLLs and whatnot which are handy for games
+  Read-S3Object -BucketName "${deploy_bucket}" -Key "${xinputdll_key}" -File "C:\Windows\System32\XInput9_1_0.dll" -ProfileName DeployProfile
 </powershell>
 <persist>true</persist>
