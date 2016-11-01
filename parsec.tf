@@ -167,7 +167,8 @@ resource "aws_instance" "parsec" {
     # spot_type = "one-time"
     ami = "${data.aws_ami.parsec.id}"
     instance_type = "g2.2xlarge"
-    availability_zone = "us-east-1b"
+    availability_zone = "${aws_ebs_volume.parsec_game_drive.availability_zone}"
+    instance_initiated_shutdown_behavior = "terminate"
 
     tags {
       Name = "ParsecServer"
