@@ -50,6 +50,25 @@ EOF
 }
 
 
+# CloudWatch alarms to bring instance down if we forget
+
+resource "aws_cloudwatch_metric_alarm" "idle_instance" {
+    alarm_name = "parsec-idle-alarm"
+    comparison_operator = "LessThanThreshold"
+    evaluation_periods = "10"
+    metric_name = "CPUUtilization"
+    namespace = "AWS/EC2"
+    period = "180"
+    statistic = "Maximum"
+    threshold = "5"
+    alarm_description = "Alarm waits for idle Parsec instances"
+    alarm_actions = ["arn:aws:automate:${var.aws_region}:ec2:terminate"]
+    dimensions {
+        InstanceId = "${aws_instance.parsec.id}"
+    }
+}
+
+
 # A few non-standard DLLs we want to send
 
 resource "aws_s3_bucket" "deploybucket" {
